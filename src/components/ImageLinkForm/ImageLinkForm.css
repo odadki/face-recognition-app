@@ -1,3 +1,12 @@
+.title {
+  margin-top: 50px;
+}
+
+.caption {
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
 .form {
   width: 700px;
   background-color: silver;

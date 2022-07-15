@@ -1,10 +1,16 @@
 import React from "react";
+import Logo from "../Logo/Logo";
+
 import "./ImageLinkForm.css";
 
 const ImageLinkForm = ({ onInputChange, onButtonSubmit }) => {
   return (
     <div>
-      <p>{"This Magic Brain will detect faces in your pictures"}</p>
+      <h1 className="title">{"This Magic Brain"}</h1>
+      <Logo />
+      <h3 className="caption">
+        Enter an image url with face(s), and magic brain will detect them
+      </h3>
       <div className="center">
         <div className="form center pa4 br3 shadow-5">
           <input
