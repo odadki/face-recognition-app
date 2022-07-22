@@ -6,7 +6,7 @@ import "./ImageLinkForm.css";
 const ImageLinkForm = ({ onInputChange, onButtonSubmit }) => {
   return (
     <div>
-      <h1 className="title">{"This Magic Brain"}</h1>
+      <h1 className="title">{"SmartBrain"}</h1>
       <Logo />
       <h3 className="caption">
         Enter an image url with face(s), and magic brain will detect them

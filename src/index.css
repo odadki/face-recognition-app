@@ -2,12 +2,11 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Spline Sans Mono", monospace;
-  background: rgb(2, 0, 36);
-  background: linear-gradient(
-    0deg,
-    rgba(2, 0, 36, 1) 0%,
-    rgba(204, 204, 255, 1) 0%,
-    rgba(180, 242, 255, 1) 100%
+  background: rgb(209, 249, 228);
+  background: radial-gradient(
+    circle,
+    rgba(209, 249, 228, 1) 0%,
+    rgba(236, 189, 249, 1) 100%
   );
   background-repeat: no-repeat;
   background-attachment: fixed;
