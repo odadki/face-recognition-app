@@ -108,10 +108,7 @@ class App extends Component {
           onInputChange={this.onInputChange}
           onButtonSubmit={this.onButtonSubmit}
         />
-<<<<<<< Updated upstream
-=======
         <br />
->>>>>>> Stashed changes
         <FaceRecognition box={box} imageUrl={imageUrl} />
       </div>
     );
