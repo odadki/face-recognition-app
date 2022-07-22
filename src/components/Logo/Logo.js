@@ -8,7 +8,11 @@ const Logo = () => {
     <div className="center">
       <Tilt
         className="Tilt br2"
+<<<<<<< Updated upstream
         options={{ max: 50 }}
+=======
+        options={{ max: 50, scale: 1, speed: 300 }}
+>>>>>>> Stashed changes
         style={{ height: 150, width: 150 }}
       >
         <div className="Tilt-inner pa3">
