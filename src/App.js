@@ -105,24 +105,51 @@ class App extends Component {
     this.setState({ input: event.target.value });
   };
 
+  // onButtonSubmit = () => {
+  //   this.setState({ imageUrl: this.state.input });
+
+  //   // app.models
+  //   //   .predict("face-detection", this.state.input)
+  //   fetch(
+  //     "https://api.clarifai.com/v2/models/" + "face-detection" + "/outputs",
+  //     returnClarifaiRequestOptions(this.state.input)
+  //   )
+  //     .then((response) => response.json())
+  //     .then((response) => {
+  //       console.log("hi", response);
+  //       if (response) {
+  //         fetch("http://localhost:3000/image", {
+  //           method: "put",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({
+  //             id: this.state.user.id,
+  //           }),
+  //         })
+  //           .then((response) => response.json())
+  //           .then((count) => {
+  //             this.setState(Object.assign(this.state.user, { entries: count }));
+  //           });
+  //       }
+  //       this.displayFaceBox(this.calculateFaceLocation(response));
+  //     })
+  //     .catch((err) => console.log(err));
+  // };
   onButtonSubmit = () => {
     this.setState({ imageUrl: this.state.input });
-    // app.models
-    //   .predict("face-detection", this.state.input)
-    fetch(
-      "https://api.clarifai.com/v2/models/" + "face-detection" + "/outputs",
-      returnClarifaiRequestOptions(this.state.input)
-    )
+
+    fetch("http://localhost:5001/clarifai", {
+      method: "post",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input: this.state.input }),
+    })
       .then((response) => response.json())
       .then((response) => {
-        console.log("hi", response);
+        console.log("Clarifai response: ", response);
         if (response) {
-          fetch("http://localhost:3000/image", {
+          fetch("http://localhost:5001/image", {
             method: "put",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              id: this.state.user.id,
-            }),
+            body: JSON.stringify({ id: this.state.user.id }),
           })
             .then((response) => response.json())
             .then((count) => {
