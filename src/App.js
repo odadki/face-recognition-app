@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-// import Clarifai from "clarifai";
 // import SignIn from "./components/SignIn/SignIn";
 // import Register from "./components/Register/Register";
 import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
@@ -7,50 +6,8 @@ import FaceRecognition from "./components/FaceRecognition/FaceRecognition";
 // import Logo from "./components/Logo/Logo";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 // import Rank from "./components/Rank/Rank";
+import { detectFaces } from "./faceDetector";
 import "./App.css";
-
-// const app = new Clarifai.App({
-//   apiKey: "cae7346fc0924a30b255e5debc863342",
-// });
-
-const returnClarifaiRequestOptions = (imageUrl) => {
-  // Your PAT (Personal Access Token) can be found in the portal under Authentification
-  const PAT = "973ad1547d9b43ba8bac16e80a72fa26";
-  // Specify the correct user_id/app_id pairings
-  // Since you're making inferences outside your app's scope
-  const USER_ID = "guwswr1yxk7z";
-  const APP_ID = "face-identification";
-  // Change these to whatever model and image URL you want to use
-  const MODEL_ID = "face-detection";
-  const IMAGE_URL = imageUrl;
-
-  const raw = JSON.stringify({
-    user_app_id: {
-      user_id: USER_ID,
-      app_id: APP_ID,
-    },
-    inputs: [
-      {
-        data: {
-          image: {
-            url: IMAGE_URL,
-          },
-        },
-      },
-    ],
-  });
-
-  const requestOptions = {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: "Key " + PAT,
-    },
-    body: raw,
-  };
-
-  return requestOptions;
-};
 
 class App extends Component {
   constructor() {
@@ -58,7 +15,10 @@ class App extends Component {
     this.state = {
       input: "",
       imageUrl: "",
-      box: {},
+      boxes: [],
+      status: "idle", // idle | loading | done | error
+      message: "",
+      requestId: 0,
       route: "signin",
       isSignedIn: false,
       user: {
@@ -83,84 +43,85 @@ class App extends Component {
     });
   };
 
-  calculateFaceLocation = (data) => {
-    const clarifaiFace =
-      data.outputs[0].data.regions[0].region_info.bounding_box;
-    const image = document.getElementById("inputimage");
-    const width = Number(image.width);
-    const height = Number(image.height);
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - clarifaiFace.right_col * width,
-      bottomRow: height - clarifaiFace.bottom_row * height,
-    };
+  // Converts MediaPipe detections (pixels in the image's natural size) into
+  // the inset offsets used by .bounding-box, as percentages so the boxes stay
+  // aligned however large the image is displayed.
+  calculateFaceLocation = (result, image) => {
+    const width = image.naturalWidth;
+    const height = image.naturalHeight;
+    const pct = (value, total) => `${(value / total) * 100}%`;
+    return result.detections.map(({ boundingBox }) => {
+      const { originX, originY, width: w, height: h } = boundingBox;
+      const right = Math.min(originX + w, width);
+      const bottom = Math.min(originY + h, height);
+      return {
+        leftCol: pct(Math.max(originX, 0), width),
+        topRow: pct(Math.max(originY, 0), height),
+        rightCol: pct(width - right, width),
+        bottomRow: pct(height - bottom, height),
+      };
+    });
   };
 
-  displayFaceBox = (box) => {
-    this.setState({ box: box });
+  displayFaceBox = (boxes) => {
+    const count = boxes.length;
+    this.setState({
+      boxes,
+      status: "done",
+      message:
+        count === 0
+          ? "No faces found in this image. Try a photo where faces are clear and facing the camera."
+          : `Found ${count} face${count === 1 ? "" : "s"}.`,
+    });
+  };
+
+  showError = (message) => {
+    this.setState({ boxes: [], status: "error", message });
   };
 
   onInputChange = (event) => {
     this.setState({ input: event.target.value });
   };
 
-  // onButtonSubmit = () => {
-  //   this.setState({ imageUrl: this.state.input });
-
-  //   // app.models
-  //   //   .predict("face-detection", this.state.input)
-  //   fetch(
-  //     "https://api.clarifai.com/v2/models/" + "face-detection" + "/outputs",
-  //     returnClarifaiRequestOptions(this.state.input)
-  //   )
-  //     .then((response) => response.json())
-  //     .then((response) => {
-  //       console.log("hi", response);
-  //       if (response) {
-  //         fetch("http://localhost:3000/image", {
-  //           method: "put",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify({
-  //             id: this.state.user.id,
-  //           }),
-  //         })
-  //           .then((response) => response.json())
-  //           .then((count) => {
-  //             this.setState(Object.assign(this.state.user, { entries: count }));
-  //           });
-  //       }
-  //       this.displayFaceBox(this.calculateFaceLocation(response));
-  //     })
-  //     .catch((err) => console.log(err));
-  // };
   onButtonSubmit = () => {
-    this.setState({ imageUrl: this.state.input });
+    const url = this.state.input.trim();
+    if (!/^https?:\/\/\S+$/i.test(url)) {
+      this.showError("Please enter an image URL starting with http:// or https://");
+      return;
+    }
+    this.setState((state) => ({
+      imageUrl: url,
+      boxes: [],
+      status: "loading",
+      message: "Detecting faces…",
+      requestId: state.requestId + 1,
+    }));
+  };
 
-    // fetch("http://localhost:5001/clarifai", {
-    fetch("https://face-recognition-app-api-mb0k.onrender.com/clarifai", {
-      method: "post",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input: this.state.input }),
-    })
-      .then((response) => response.json())
-      .then((response) => {
-        console.log("Clarifai response: ", response);
-        if (response) {
-          // fetch("http://localhost:5001/image", {
-          fetch("https://face-recognition-app-api-mb0k.onrender.com/image", {
-            method: "put",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: this.state.user.id }),
-          })
-            .then((response) => response.json())
-            .then((count) => {
-              this.setState(Object.assign(this.state.user, { entries: count }));
-            });
-        }
-        this.displayFaceBox(this.calculateFaceLocation(response));
+  // Called once the image has loaded (with CORS) into the page.
+  onImageLoad = (event, requestId) => {
+    const image = event.target;
+    detectFaces(image)
+      .then((result) => {
+        if (requestId !== this.state.requestId) return; // a newer image was submitted
+        this.displayFaceBox(this.calculateFaceLocation(result, image));
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        if (requestId !== this.state.requestId) return;
+        console.error("Face detection failed:", err);
+        this.showError(
+          err && err.name === "SecurityError"
+            ? "This image can't be analyzed because its site doesn't allow other apps to read it (CORS). Try an image from Unsplash or Pexels."
+            : "Something went wrong while detecting faces. Please try again or use a different image."
+        );
+      });
+  };
+
+  onImageError = (requestId) => {
+    if (requestId !== this.state.requestId) return;
+    this.showError(
+      "Couldn't load that image. Check the URL points directly to an image file, or try another site — some sites block other apps from using their images (CORS). Images from Unsplash or Pexels work well."
+    );
   };
 
   onRouteChange = (route) => {
@@ -173,7 +134,7 @@ class App extends Component {
   };
 
   render() {
-    const { isSignedIn, imageUrl, route, box } = this.state;
+    const { imageUrl, boxes, status, message, requestId } = this.state;
     return (
       <div className="App">
         {/* <Logo /> */}
@@ -181,9 +142,24 @@ class App extends Component {
         <ImageLinkForm
           onInputChange={this.onInputChange}
           onButtonSubmit={this.onButtonSubmit}
+          isLoading={status === "loading"}
         />
+        {message && (
+          <p
+            className={`status-message f5 ${status === "error" ? "error" : ""}`}
+            role={status === "error" ? "alert" : "status"}
+          >
+            {message}
+          </p>
+        )}
         <br />
-        <FaceRecognition box={box} imageUrl={imageUrl} />
+        <FaceRecognition
+          boxes={boxes}
+          imageUrl={imageUrl}
+          requestId={requestId}
+          onImageLoad={this.onImageLoad}
+          onImageError={this.onImageError}
+        />
       </div>
     );
   }

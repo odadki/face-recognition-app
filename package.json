@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.1.1",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
-    "clarifai": "^2.9.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-parallax-tilt": "^1.7.304",
@@ -16,8 +16,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
+    "prestart": "node scripts/copy-mediapipe-wasm.js",
     "build": "NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
+    "prebuild": "node scripts/copy-mediapipe-wasm.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
@@ -29,18 +31,11 @@
       "react-app/jest"
     ]
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ],
   "devDependencies": {
     "gh-pages": "^6.3.0"
   }
