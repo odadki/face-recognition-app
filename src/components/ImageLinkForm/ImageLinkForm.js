@@ -3,7 +3,10 @@ import Logo from "../Logo/Logo";
 
 import "./ImageLinkForm.css";
 
-const ImageLinkForm = ({ onInputChange, onButtonSubmit }) => {
+const ImageLinkForm = ({ onInputChange, onButtonSubmit, isLoading }) => {
+  const onKeyDown = (event) => {
+    if (event.key === "Enter" && !isLoading) onButtonSubmit();
+  };
   return (
     <div>
       <h1 className="title">{"SmartBrain"}</h1>
@@ -16,13 +19,17 @@ const ImageLinkForm = ({ onInputChange, onButtonSubmit }) => {
           <input
             className="f4 pa2 w-70 center"
             type="text"
+            aria-label="Image URL"
+            placeholder="https://..."
             onChange={onInputChange}
+            onKeyDown={onKeyDown}
           />
           <button
             className="w-30 grow f4 link ph3 pv2 dib white bg-light-purple"
             onClick={onButtonSubmit}
+            disabled={isLoading}
           >
-            Detect
+            {isLoading ? "Detecting…" : "Detect"}
           </button>
         </div>
       </div>

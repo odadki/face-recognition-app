@@ -6,3 +6,19 @@
   display: flex;
   justify-content: center;
 }
+
+.status-message {
+  max-width: 700px;
+  margin: 16px auto 0;
+  padding: 0 16px;
+}
+
+.status-message.error {
+  color: #b00020;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
